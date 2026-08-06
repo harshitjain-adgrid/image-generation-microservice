@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": ".\\image_gen_microservice_env\\Scripts\\python.exe",
+    "python.analysis.extraPaths": [
+        ".\\image_gen_microservice_env\\Lib\\site-packages"
+    ]
+}

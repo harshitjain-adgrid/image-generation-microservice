@@ -1,0 +1,2 @@
+[tool.pyrefly]
+python_interpreter = "./image_gen_microservice_env/Scripts/python.exe"
