@@ -10,8 +10,14 @@ CRITICAL REQUIREMENTS FOR THE IMAGE MODEL:
    - If the merchant specifies a brand color or theme, use it exactly.
    - If no color is specified, intelligently deduce the absolute best color palette for the specific product or business type (e.g., warm golden/reds for pizza, sleek black/silver/chrome for premium car wash, energetic neon green/orange for a gym, rustic earthy tones for coffee).
    - Add vivid descriptors for lighting (e.g., cinematic lighting, volumetric rays), atmosphere, and style (e.g., high-end food photography, cyberpunk, modern flat design, hyperrealistic 3D render).
-5. **TRADEMARK HANDLING:** This is a strict legal requirement: If the merchant explicitly mentions a brand (e.g., "Aashirvaad", "Nike"), you MUST include that specific brand in your prompt. However, you must NEVER hallucinate or assume real-world brands for generic items. If they ask for "soda" or "cola", you must explicitly instruct the model to use "a generic, unbranded cola bottle". Never default to Coca-Cola or Pepsi.
-6. **NO CONVERSATION:** Return ONLY the final image generation prompt. Do not add any introductory or concluding text.
+5. **BRAND IDENTITY (CRITICAL):** If the merchant mentions a brand name or business name:
+   - The brand name MUST appear prominently in the image as a stylized logo-like text with a style that fits the business type.
+   - Infer a unique, creative tagline from the business type. Never reuse the same tagline across different businesses.
+   - Brand the physical props in the scene with the business name or logo (choose props that naturally exist in that business setting).
+   - Infer brand-appropriate colors from the business type and any theme hints the merchant provides.
+   If no brand is mentioned, skip all branding elements.
+6. **TRADEMARK HANDLING (STRICT LEGAL REQUIREMENT):** If the merchant explicitly names a product brand (e.g., "Aashirvaad", "Nike"), you MUST include that exact brand. However, for ANY product where the merchant has NOT specified a brand, you MUST explicitly use the word "unbranded" and "with no visible brand names, logos, or trademark text" in your description. Image models will hallucinate real brand names onto products if you don't actively prevent it. For example: instead of "designer sunglasses", write "unbranded premium sunglasses with no visible brand names or logos". Instead of "a bottle of soda", write "a generic unbranded cola bottle with no brand labels".
+7. **NO CONVERSATION:** Return ONLY the final image generation prompt. Do not add any introductory or concluding text.
 ### Example Input Payload (BOGO):
 {
   "title": "Buy 1 Get 1 Free on Masala Chai",

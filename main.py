@@ -16,6 +16,7 @@ class GenerateRequest(BaseModel):
     query: str
     model: str = "fal-ai/gpt-image-2"
     quality: str = "low" # Options: low, medium, high
+    refiner: str = "" # Options: gemini-3.1-flash-lite, gpt-4.1-nano, gpt-4o-mini, deepseek-v3, claude-haiku
 class GenerateResponse(BaseModel):
     original_query: str
     refined_prompt: str
@@ -29,14 +30,21 @@ def health_check():
 @app.post("/generate", response_model=GenerateResponse)
 def generate_endpoint(request: GenerateRequest):
     """
-    1. Refines the user query via Gemini
-    2. Sends the refined prompt to Fal.ai
+    1. Refines the user query via the configured refiner (Gemini, GPT, etc.)
+    2. Sends the refined prompt to the configured image model on Fal.ai
     3. Downloads and saves the resulting image to the local output folder
     """
     
+    print(f"\n{'#'*60}")
+    print(f"NEW REQUEST")
+    print(f"  Text Refiner : {request.refiner or 'gemini-3.1-flash-lite (default)'}")
+    print(f"  Image Model  : {request.model}")
+    print(f"  Quality      : {request.quality}")
+    print(f"{'#'*60}")
+    
     # 1. Refine the Prompt
     try:
-        refined_prompt = refine_prompt(request.query)
+        refined_prompt = refine_prompt(request.query, refiner=request.refiner)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prompt refinement failed: {str(e)}")
         
