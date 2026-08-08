@@ -1,7 +1,6 @@
 fastapi
 uvicorn
 fal-client
-google-genai
-python-dotenv
-requests
 pydantic
+pydantic-settings
+python-dotenv
