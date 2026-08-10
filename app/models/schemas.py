@@ -76,6 +76,24 @@ class DiscountRequest(BaseModel):
     )
 
 
+# ── Regenerate Request ────────────────────────────────────────────────
+
+class RegenerateRequest(BaseModel):
+    """
+    Request body for POST /generate/regenerate.
+
+    Used when a merchant clicks "Regenerate banner". Bypasses the LLM
+    refiner entirely — the previous refined prompt is sent directly to
+    the image generator with a new random seed, producing a similar but
+    visually distinct variation.
+    """
+
+    previous_refined_prompt: str = Field(
+        ...,
+        description="The refined_prompt returned from the original /generate/deal or /generate/discount call",
+    )
+
+
 # ── Response ──────────────────────────────────────────────────────────
 
 class CostBreakdown(BaseModel):

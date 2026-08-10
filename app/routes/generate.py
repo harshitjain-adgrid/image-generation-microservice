@@ -16,6 +16,7 @@ from app.models.schemas import (
     DealRequest,
     DiscountRequest,
     GenerateResponse,
+    RegenerateRequest,
 )
 from app.services import generator, refiner
 
@@ -104,3 +105,28 @@ def generate_discount(request: DiscountRequest):
         raise HTTPException(status_code=500, detail=f"Image generation failed: {e}")
 
     return _build_response(refined, image_url)
+
+
+@router.post("/regenerate", response_model=GenerateResponse)
+def regenerate_image(request: RegenerateRequest):
+    """
+    Regenerate a banner using the same refined prompt.
+
+    Bypasses the LLM refiner entirely — sends the previous prompt
+    directly to GPT Image 2 with a new random seed. This produces
+    a similar but visually distinct variation at zero refiner cost.
+    """
+    logger.info("Regenerate request")
+
+    try:
+        image_url = generator.generate(prompt=request.previous_refined_prompt)
+    except Exception as e:
+        logger.error("Image regeneration failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Image generation failed: {e}")
+
+    return GenerateResponse(
+        image_url=image_url,
+        refined_prompt=request.previous_refined_prompt,
+        refiner_used="skipped",
+        cost=None,
+    )
