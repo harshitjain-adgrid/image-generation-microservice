@@ -119,7 +119,11 @@ def regenerate_image(request: RegenerateRequest):
     logger.info("Regenerate request")
 
     try:
-        image_url = generator.generate(prompt=request.previous_refined_prompt)
+        kwargs = {"prompt": request.previous_refined_prompt}
+        if request.image_size:
+            kwargs["image_size"] = request.image_size
+            
+        image_url = generator.generate(**kwargs)
     except Exception as e:
         logger.error("Image regeneration failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Image generation failed: {e}")

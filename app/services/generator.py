@@ -15,13 +15,14 @@ from app.providers import fal_image
 logger = logging.getLogger("imagegen.services.generator")
 
 
-def generate(prompt: str, quality: str | None = None) -> str:
+def generate(prompt: str, quality: str | None = None, image_size: str | None = None) -> str:
     """
     Generate an image from a refined prompt.
 
     Args:
         prompt: The refined image generation prompt.
         quality: Image quality (low | medium | high). Uses config default if None.
+        image_size: The aspect ratio.
 
     Returns:
         URL of the generated image.
@@ -34,4 +35,8 @@ def generate(prompt: str, quality: str | None = None) -> str:
         extra={"generator": "fal-ai/gpt-image-2", "quality": resolved_quality},
     )
 
-    return fal_image.generate(prompt=prompt, quality=resolved_quality)
+    kwargs = {"prompt": prompt, "quality": resolved_quality}
+    if image_size:
+        kwargs["image_size"] = image_size
+
+    return fal_image.generate(**kwargs)

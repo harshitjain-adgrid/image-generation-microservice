@@ -49,11 +49,16 @@ def generate(
     )
     logger.debug("Full prompt:\n%s", safe_prompt)
 
+    # Intercept custom presets that fal.ai doesn't natively support
+    resolved_image_size: str | dict = image_size
+    if image_size == "portrait_4_5":
+        resolved_image_size = {"width": 1024, "height": 1280}
+
     result = fal_client.subscribe(
         "fal-ai/gpt-image-2",
         arguments={
             "prompt": safe_prompt,
-            "image_size": image_size,
+            "image_size": resolved_image_size,
             "quality": quality,
         },
     )

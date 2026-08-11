@@ -7,7 +7,23 @@ the fields relevant to that category. No ambiguity in Swagger docs.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+
+# ── Valid Fal.ai Aspect Ratios ────────────────────────────────────────
+# "portrait_4_5" is a custom preset we handle — fal.ai doesn't have it
+# natively, so we translate it to {"width": 1024, "height": 1280}.
+ImageSize = Literal[
+    "square_hd",
+    "square",
+    "portrait_4_3",
+    "portrait_4_5",
+    "portrait_16_9",
+    "landscape_4_3",
+    "landscape_16_9",
+]
 
 
 # ── Deal Request ──────────────────────────────────────────────────────
@@ -91,6 +107,10 @@ class RegenerateRequest(BaseModel):
     previous_refined_prompt: str = Field(
         ...,
         description="The refined_prompt returned from the original /generate/deal or /generate/discount call",
+    )
+    image_size: ImageSize | None = Field(
+        default=None,
+        description="Optional: override the aspect ratio for this regeneration",
     )
 
 
