@@ -22,7 +22,7 @@ from app.services import generator, refiner
 
 logger = logging.getLogger("imagegen.routes.generate")
 
-router = APIRouter(prefix="/generate", tags=["generate"])
+router = APIRouter(prefix="/v1/generate", tags=["generate"])
 
 
 def _build_response(refined: refiner.RefinedPrompt, image_url: str) -> GenerateResponse:

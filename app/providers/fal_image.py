@@ -18,7 +18,7 @@ logger = logging.getLogger("imagegen.providers.fal_image")
 def generate(
     prompt: str,
     quality: str = "low",
-    image_size: str = "landscape_4_3",
+    image_size: str = "landscape_16_9",
 ) -> str:
     """
     Generate an image using GPT Image 2 on fal.ai.
