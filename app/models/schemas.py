@@ -5,24 +5,37 @@ Two separate request models for deals and discounts — each with only
 the fields relevant to that category. No ambiguity in Swagger docs.
 """
 
-from __future__ import annotations
-
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
 
 # ── Valid Fal.ai Aspect Ratios ────────────────────────────────────────
-# "portrait_4_5" is a custom preset we handle — fal.ai doesn't have it
-# natively, so we translate it to {"width": 1024, "height": 1280}.
+# Some of these are native fal.ai presets, others are custom presets
+# that we translate to {"width": W, "height": H} in the provider layer.
 ImageSize = Literal[
     "square_hd",
     "square",
     "portrait_4_3",
     "portrait_4_5",
     "portrait_16_9",
+    "portrait_3_5",
+    "portrait_9_18",
     "landscape_4_3",
     "landscape_16_9",
+    "landscape_18_9",
+    "landscape_20_9",
+]
+
+# Aspect ratios generated during batch (on offer approval).
+# Excludes landscape_16_9 since it already exists from the initial generation.
+BATCH_SIZES: list[str] = [
+    "portrait_3_5",     # 3:5
+    "portrait_16_9",    # 9:16
+    "portrait_9_18",    # 9:18
+    "portrait_4_3",     # 3:4
+    "landscape_18_9",   # 18:9
+    "landscape_20_9",   # 20:9
 ]
 
 
@@ -55,6 +68,7 @@ class DealRequest(BaseModel):
         default=None,
         description="Offer type. e.g. BOGO, COMBO, BUNDLE",
     )
+    image_size: Annotated[ImageSize, Field(description="Aspect ratio")] = "landscape_16_9"
 
 
 # ── Discount Request ─────────────────────────────────────────────────
@@ -90,6 +104,27 @@ class DiscountRequest(BaseModel):
         default=None,
         description="Product category for visual theme. e.g. GROCERY, ELECTRONICS, FASHION",
     )
+    image_size: Annotated[ImageSize, Field(description="Aspect ratio")] = "landscape_16_9"
+
+
+# ── Food Request ─────────────────────────────────────────────────────
+
+class FoodRequest(BaseModel):
+    """
+    Request body for POST /generate/food.
+
+    Used for generating clean, text-free commercial food photography
+    of individual menu items (like Zomato/Swiggy).
+    """
+    dish_name: str = Field(
+        ...,
+        description="The name of the food item (e.g. 'Butter Chicken', 'Margherita Pizza')"
+    )
+    merchant_prompt: str | None = Field(
+        default=None,
+        description="Optional: Custom creative direction (e.g., 'serve in a black ceramic bowl')"
+    )
+    image_size: Annotated[ImageSize, Field(description="Aspect ratio")] = "landscape_16_9"
 
 
 # ── Regenerate Request ────────────────────────────────────────────────
@@ -108,10 +143,30 @@ class RegenerateRequest(BaseModel):
         ...,
         description="The refined_prompt returned from the original /generate/deal or /generate/discount call",
     )
-    image_size: ImageSize | None = Field(
-        default=None,
-        description="Optional: override the aspect ratio for this regeneration",
+    image_size: Annotated[ImageSize, Field(description="Aspect ratio")] = "landscape_16_9"
+
+
+# ── Batch Request ────────────────────────────────────────────────────
+
+class BatchRequest(BaseModel):
+    """
+    Request body for POST /generate/batch.
+
+    Used when a merchant approves an offer — generates images for all
+    required aspect ratios in parallel so they are pre-cached for later
+    promotion (stories, banners, etc.). Bypasses the LLM refiner.
+    """
+
+    approved_refined_prompt: str = Field(
+        ...,
+        description="The refined_prompt from the approved offer",
     )
+    sizes: list[str] | None = Field(
+        default=None,
+        description="Optional override: list of image size keys to generate. "
+                    "Defaults to BATCH_SIZES if not provided.",
+    )
+
 
 
 # ── Response ──────────────────────────────────────────────────────────
@@ -133,4 +188,26 @@ class GenerateResponse(BaseModel):
     cost: CostBreakdown | None = Field(
         default=None,
         description="Cost and usage breakdown",
+    )
+
+
+class BatchImageItem(BaseModel):
+    """A single image within a batch generation response."""
+
+    image_url: str = Field(description="URL of the generated image")
+    image_size: str = Field(description="Aspect ratio used. e.g. portrait_3_5, landscape_18_9")
+
+
+class BatchGenerateResponse(BaseModel):
+    """Response when generate_all=true. Contains images for all required aspect ratios."""
+
+    images: list[BatchImageItem] = Field(description="List of generated images with their ratios")
+    refined_prompt: str = Field(description="The approved refined prompt that was used")
+    refiner_used: str = Field(
+        default="skipped",
+        description="Refiner is skipped in batch mode — the approved prompt is reused as-is",
+    )
+    cost: CostBreakdown | None = Field(
+        default=None,
+        description="Always None in batch mode (no refiner cost)",
     )

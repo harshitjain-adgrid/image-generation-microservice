@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from typing import Union
 
 from app.config import REFINER_REGISTRY, get_settings, get_system_prompt
-from app.models.schemas import DealRequest, DiscountRequest
+from app.models.schemas import DealRequest, DiscountRequest, FoodRequest
 from app.providers import openrouter
 
 logger = logging.getLogger("imagegen.services.refiner")
@@ -64,6 +64,17 @@ def _build_discount_payload(request: DiscountRequest) -> dict:
     return payload
 
 
+def _build_food_payload(request: FoodRequest) -> dict:
+    """Build a clean dict from a food request."""
+    payload: dict = {
+        "type": "food",
+        "dish_name": request.dish_name,
+    }
+    if request.merchant_prompt:
+        payload["merchant_prompt"] = request.merchant_prompt
+    return payload
+
+
 def _resolve_refiner(refiner_name: str) -> str:
     """Map a friendly refiner name to its OpenRouter model ID."""
     if refiner_name not in REFINER_REGISTRY:
@@ -73,7 +84,7 @@ def _resolve_refiner(refiner_name: str) -> str:
 
 
 def refine(
-    request: Union[DealRequest, DiscountRequest],
+    request: Union[DealRequest, DiscountRequest, FoodRequest],
     use_case: str = "coupon",
 ) -> RefinedPrompt:
     """
@@ -89,8 +100,10 @@ def refine(
     # Build the input payload based on request type
     if isinstance(request, DealRequest):
         payload = _build_deal_payload(request)
-    else:
+    elif isinstance(request, DiscountRequest):
         payload = _build_discount_payload(request)
+    else:
+        payload = _build_food_payload(request)
 
     refiner_input = json.dumps(payload, ensure_ascii=False, indent=2)
 
@@ -159,3 +172,4 @@ def refine(
             f"All refiners failed. Primary ({primary_name}): {primary_error} | "
             f"Fallback ({fallback_name}): {fallback_err}"
         ) from fallback_err
+

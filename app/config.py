@@ -70,6 +70,10 @@ USE_CASE_REGISTRY: dict[str, dict[str, str]] = {
         "prompt_module": "app.prompts.coupon",
         "prompt_attr": "COUPON_SYSTEM_PROMPT",
     },
+    "food": {
+        "prompt_module": "app.prompts.food",
+        "prompt_attr": "FOOD_SYSTEM_PROMPT",
+    },
 }
 
 DEFAULT_USE_CASE = "coupon"
