@@ -3,8 +3,12 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
+# Create a virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir --target=/app/deps -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 
 # ── Stage 2: Production image ────────────────────────────────────────
@@ -14,8 +18,9 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Copy only the installed packages from the builder stage
-COPY --from=builder /app/deps /usr/local/lib/python3.11/site-packages
+# Copy the virtual environment from the builder stage
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 COPY . .
@@ -28,7 +33,7 @@ EXPOSE 8000
 
 # Health check for container orchestrators (Cloud Run, ECS, K8s)
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/health')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Production: 4 workers to handle concurrent requests.
 # --timeout-keep-alive 120: prevents load balancers from dropping
